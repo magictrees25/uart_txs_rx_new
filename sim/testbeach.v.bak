@@ -1,0 +1,82 @@
+`timescale 1ns/1ps
+
+
+
+
+
+module testbeach();
+
+
+    reg     clk;
+    reg     rst;
+
+    reg     uart_tx_req;
+    wire    uart_txs_done;
+    reg[23:0]   idats;
+
+
+
+    wire        uart;
+    
+
+
+    wire[23:0]  odats;
+    wire        uart_rxs_done;
+
+
+
+
+    always #50 clk = ~clk;
+
+    initial begin
+        clk = 1'b1;
+        rst = 1'b1;
+        idats = 'd12256;
+        uart_tx_req = 1'b0;
+
+        #100
+        rst = 1'b0;
+        #100
+        rst = 1'b1;
+
+        #100
+        uart_tx_req <= 1'b1;
+    end
+    
+
+    always@(posedge clk)
+        if(uart_txs_done == 1'b1)
+            idats <= idats + 'd2323;
+
+
+
+UART_MulRX #(
+    .MulRXNum (3)
+)UART_MulRX_HP(
+    .sys_clk                            (clk),         /*系统时钟 50M*/
+    .rst_n                              (rst),          /*系统复位*/
+
+    .uart_rxs_done                      (uart_rxs_done),    /*串口接收完成*/
+   .odats                               (odats),           /*接收数据*/
+
+    .uartrx                           (uart)         /*uart rx数据线*/
+);
+
+UART_MulTX #( 
+    .MulTXNum(3))   /*每次发送的比特数*/
+UART_MulTXHP(
+    
+    .sys_clk                            (clk),         /*系统时钟 50M*/
+    .rst_n                              (rst),          /*系统复位*/
+
+    .uart_tx_req                        (uart_tx_req),   /*串口发送请求*/
+    .uart_txs_done                      (uart_txs_done),  /*串口发送完成*/       
+
+    .idats                              (idats),           /*发送的数据*/
+    .uarttx                             (uart)        /*uart tx数据线*/
+);
+
+
+
+
+endmodule
